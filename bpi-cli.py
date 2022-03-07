@@ -106,7 +106,5 @@ if __name__ == "__main__":
     user = "neo4j"
     password = "drni"
     app = App(bolt_url, user, password)
-    # app.create_friendship("Alice", "David")
-    # app.find_person("Alice")
     app.get_devices()
     app.close()
