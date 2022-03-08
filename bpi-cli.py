@@ -2,6 +2,7 @@ from neo4j import GraphDatabase
 import logging
 from neo4j.exceptions import ServiceUnavailable
 from beautifultable import BeautifulTable
+from deviceVisualizer import device_visualizer
 
 class App:
 
@@ -191,6 +192,8 @@ if __name__ == "__main__":
                     app.get_folders(present_folder)
                 else:
                     app.get_metamodels()
+            elif command == "test":
+                device_visualizer(app,255859431696502445)
             elif command == "exit":
                 break
             elif command == "q":
