@@ -2,7 +2,14 @@ from neo4j import GraphDatabase
 import logging
 from neo4j.exceptions import ServiceUnavailable
 from beautifultable import BeautifulTable
+import os
 from deviceVisualizer import device_visualizer
+
+folder_stack = []
+result_dict = {}
+select_dict = {}
+metamodel_map={}
+current_obj_drni_id = -1
 
 class App:
 
@@ -102,11 +109,14 @@ class App:
             for row in result:
                 index = index+1
                 device_name = row.get("name", "") 
-                vendor = row.get("metamodel_id","") 
+                metamodel_id = row.get("metamodel_id","") 
                 cateogry = row.get("latest", "") 
                 latest = row.get("hypermodel_id","") 
                 
-                table.rows.append([index, device_name,vendor,cateogry,latest])
+                result_dict[device_name] = metamodel_id
+                metamodel_map[device_name] = metamodel_id
+                select_dict[index] = metamodel_id
+                table.rows.append([index, device_name,metamodel_id,cateogry,latest])
             
             table.columns.header.alignment= BeautifulTable.ALIGN_LEFT
             table.columns.alignment = BeautifulTable.ALIGN_LEFT
@@ -116,17 +126,20 @@ class App:
         with self.driver.session() as session:
             result = session.read_transaction(self._get_folder_list,folder_name)
             table = BeautifulTable()
-            table.columns.width = [5,40, 15, 15, 15]
-            table.columns.header=["#", "name","metamodel_id","latest","hypermodel_id"]
+            table.columns.width = [5,40, 15, 15, 15, 15]
+            table.columns.header=["#", "name","metamodel_id","drniId","latest","hypermodel_id"]
             index = 0
             for row in result:
                 index = index+1
                 device_name = row.get("name", "") 
-                vendor = row.get("metamodel_id","") 
+                metamodel_id = row.get("metamodel_id","") 
+                drniId = row.get("drniId","")
                 cateogry = row.get("latest", "") 
                 latest = row.get("hypermodel_id","") 
                 
-                table.rows.append([index, device_name,vendor,cateogry,latest])
+                result_dict[device_name] = drniId
+                select_dict[index] = drniId
+                table.rows.append([index, device_name,metamodel_id,drniId, cateogry,latest])
             
             table.columns.header.alignment= BeautifulTable.ALIGN_LEFT
             table.columns.alignment = BeautifulTable.ALIGN_LEFT
@@ -152,25 +165,75 @@ class App:
     
     @staticmethod
     def _get_folder_list(tx,folder_name):
-        query = (
-            "match (d:{0}) return distinct d.name as name,"
-            " d.metamodelId as metamodel_id, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
-        ).format(folder_name)
 
+        query = (
+        "match (d:{0}) return distinct d.name as name,"
+        " d.metamodelId as metamodel_id, d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
+        ).format(folder_name)
         result = tx.run(query)
+
+        # try:
+        #     query = (
+        #     "match (d:{0}) return distinct d.name as name,"
+        #     " d.metamodelId as metamodel_id, d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
+        #     ).format(folder_name)
+        #     result = tx.run(query)
+        #     if len(result) == 0:
+        #         print("No Result")
+        #         raise Exception("No Result")
+        # except:
+        #     drni_id = result_dict.get(folder_name)
+        #     query = (
+        #     "match (d) where d.drniId={0} return distinct d.name as name,"
+        #     " d.metamodelId as metamodel_id,  d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
+        #     ).format(drni_id)
+        #     result = tx.run(query)
+        
         return [row for row in result]
+
+    @staticmethod
+    def _get_folder_list2(tx):
+        if len(folder_stack)>=2:
+            to_look = folder_stack[-1]
+            to_look_in = folder_stack[-2]
+            query = (
+            "match (d) where d.type='{0}' and d.name='{1}' return distinct d.name as name,"
+            " d.metamodelId as metamodel_id, d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
+            ).format(to_look_in,to_look)
+            result = tx.run(query)
+            return [row for row in result]
+        else:
+            return []
+    
+    def get_folders2(self):
+            with self.driver.session() as session:
+                result = session.read_transaction(self._get_folder_list2)
+                table = BeautifulTable()
+                table.columns.width = [5,40, 15, 15, 15, 15]
+                table.columns.header=["#", "name","metamodel_id","drniId","latest","hypermodel_id"]
+                index = 0
+                for row in result:
+                    index = index+1
+                    device_name = row.get("name", "") 
+                    metamodel_id = row.get("metamodel_id","") 
+                    drniId = row.get("drniId","")
+                    cateogry = row.get("latest", "") 
+                    latest = row.get("hypermodel_id","") 
+                    
+                    result_dict[device_name] = drniId
+                    select_dict[index] = drniId
+                    table.rows.append([index, device_name,metamodel_id,drniId, cateogry,latest])
+                
+                table.columns.header.alignment= BeautifulTable.ALIGN_LEFT
+                table.columns.alignment = BeautifulTable.ALIGN_LEFT
+                print(table)
+
 
 
 def cli_label(folder_stack):
     return "/".join(folder_stack)
 
-if __name__ == "__main__":
-    bolt_url = "bolt://localhost:7687"
-    user = "neo4j"
-    password = "drni"
-    app = App(bolt_url, user, password)
-    folder_stack = []
-
+def cli_loop(app):
     while True:
         command = input("BPI-CLI/{0}>>".format(cli_label(folder_stack)))
         try:
@@ -183,23 +246,48 @@ if __name__ == "__main__":
                     if len(folder_stack)!=0:
                         folder_stack.pop()
                 else:
-                    folder = command.split(" ")[1]
+                    folder = command.split(" ",1)[1]
                     print("Folder = {0}".format(folder))
                     folder_stack.append(folder)
             elif command == "ls":
-                if len(folder_stack)>0:
+                if len(folder_stack)==1:
                     present_folder = folder_stack[-1]
                     app.get_folders(present_folder)
+                elif len(folder_stack)>1:
+                    app.get_folders2()
                 else:
                     app.get_metamodels()
-            elif command == "test":
-                device_visualizer(app,255859431696502445)
+            elif command == "device_summary":
+                device_visualizer(app,result_dict.get(folder_stack[-1]))
+            elif command == "clear":
+                os.system("cls")
+            elif command == "cls":
+                os.system("cls")
             elif command == "exit":
                 break
             elif command == "q":
                 break
+            elif command.startswith("select"):
+                select_number = command.split(" ",1)[1]
+                current_obj_drni_id = select_dict.get(int(select_number))
+                print("selected = {0}, drniId={1}".format(select_number,current_obj_drni_id))
+            elif command == "ds":
+                device_visualizer(app,current_obj_drni_id)
         except Exception as e:
             print("Malformed DB Query")
             print(e)
 
+
+if __name__ == "__main__":
+    bolt_url = "bolt://localhost:7687"
+    user = "neo4j"
+    password = "drni"
+    app = App(bolt_url, user, password)
+    
+    # folder_stack = ['Device','TEST CIENA 3926']
+    # app.get_folders2()
+    
+    # device_visualizer(app,258688516053722165)
+
+    cli_loop(app)
     app.close()

@@ -19,7 +19,7 @@ def print_summary(app, deviceDrniId):
             name = row.get("name", "") 
             status = row.get("status","") 
             type = row.get("type", "") 
-            rack = row.get("rackName", "")+": "+row.get("rackPos", "")
+            rack = "{0}: {1}".format(row.get("rackName", ""),row.get("rackPos", ""))
             table.rows.append(["Device Name",name])
             table.rows.append(["Device Type",type])
             table.rows.append(["Device status",status])
