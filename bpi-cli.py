@@ -1,7 +1,4 @@
-from platform import node
 from neo4j import GraphDatabase
-import logging
-from neo4j.exceptions import ServiceUnavailable
 from beautifultable import BeautifulTable
 import os
 from deviceVisualizer import device_visualizer
@@ -174,24 +171,7 @@ class App:
         " d.metamodelId as metamodel_id, d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
         ).format(folder_name)
         result = tx.run(query)
-
-        # try:
-        #     query = (
-        #     "match (d:{0}) return distinct d.name as name,"
-        #     " d.metamodelId as metamodel_id, d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
-        #     ).format(folder_name)
-        #     result = tx.run(query)
-        #     if len(result) == 0:
-        #         print("No Result")
-        #         raise Exception("No Result")
-        # except:
-        #     drni_id = result_dict.get(folder_name)
-        #     query = (
-        #     "match (d) where d.drniId={0} return distinct d.name as name,"
-        #     " d.metamodelId as metamodel_id,  d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
-        #     ).format(drni_id)
-        #     result = tx.run(query)
-        
+       
         return [row for row in result]
 
     @staticmethod
@@ -279,7 +259,10 @@ def cli_loop(app):
             elif command == "node_info":
                 nodeInfo(app,current_obj_drni_id)
             elif command == "network_info":
-                network_info(app,current_obj_drni_id)   
+                network_info(app,current_obj_drni_id)
+            elif command.startswith("mount"):
+                current_obj_drni_id = command.split(" ",1)[1]
+                print("Mounted(drniId) = {0}".format(current_obj_drni_id))
         except Exception as e:
             print("Malformed DB Query")
             print(e)
@@ -297,14 +280,10 @@ if __name__ == "__main__":
     app = App(bolt_url, user, password)
     
     # folder_stack = ['Device','TEST CIENA 3926']
-    # app.get_folders2()
-    
+    # app.get_folders2()   
     # device_visualizer(app,258688516053722165)
-
-    cli_loop(app)
-
     # nodeInfo(app,258688516053722165)
-
     # network_info(app,255859431696502434)
 
+    cli_loop(app)
     app.close()
