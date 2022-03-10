@@ -1,0 +1,33 @@
+{
+    "tmf639_dataSource_ingestion_uuid": "1e3651a4-38ff-44ac-9fb2-7c9be6fc2873",
+    "precomputedtypename": "Ethernet",
+    "p16Latest": true,
+    "lastModifiedDate": 1643015976832,
+    "archetypeInstanceId": 1091,
+    "p12Latest": true,
+    "p11Latest": true,
+    "metamodelId": 115,
+    "p2Latest": true,
+    "createdDate": 1638775652602,
+    "timingDebug": "Start:1630399387578,afterCreate:1630399387578,afterSetProps:1630399387578,afterBPIUUID:1630399387578,afterSetLatest:1630399387578,afterCreateRels:1630399387579,afterCreateToAcList:1630399387579",
+    "p3Latest": true,
+    "hypermodelId": 4,
+    "archetypeId": 1090,
+    "name": "pk-ethernet",
+    "drniId": 255859431696502434,
+    "BPIUId": "bpi.project.v1.1091",
+    "isClonedFromDrniId": 1091,
+    "latest": [
+      2,
+      3,
+      11,
+      12,
+      16
+    ],
+    "pinnedPerspectives": [
+      2,
+      3,
+      11
+    ],
+    "status": "In Service"
+  }

@@ -4,7 +4,7 @@ from neo4j.exceptions import ServiceUnavailable
 from beautifultable import BeautifulTable
 # from termcolor import colored
 
-def colored(r):
+def colored(r,a):
     return r
 
 def device_visualizer(app, deviceDrniId):
