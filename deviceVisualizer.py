@@ -2,7 +2,10 @@ from neo4j import GraphDatabase
 import logging
 from neo4j.exceptions import ServiceUnavailable
 from beautifultable import BeautifulTable
-from termcolor import colored
+# from termcolor import colored
+
+def colored(r):
+    return r
 
 def device_visualizer(app, deviceDrniId):
     print_summary(app, deviceDrniId)

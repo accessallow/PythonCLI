@@ -1,9 +1,12 @@
+from platform import node
 from neo4j import GraphDatabase
 import logging
 from neo4j.exceptions import ServiceUnavailable
 from beautifultable import BeautifulTable
 import os
 from deviceVisualizer import device_visualizer
+from nodeInfo import nodeInfo
+from networkInfo import network_info
 
 folder_stack = []
 result_dict = {}
@@ -197,7 +200,7 @@ class App:
             to_look = folder_stack[-1]
             to_look_in = folder_stack[-2]
             query = (
-            "match (d) where d.type='{0}' and d.name='{1}' return distinct d.name as name,"
+            "match (d) where d:{0} and d.name='{1}' return distinct d.name as name,"
             " d.metamodelId as metamodel_id, d.drniId as drniId, d.latest as latest,d.hypermodelId as hypermodel_id order by d.name"
             ).format(to_look_in,to_look)
             result = tx.run(query)
@@ -235,7 +238,7 @@ def cli_label(folder_stack):
 
 def cli_loop(app):
     while True:
-        command = input("BPI-CLI/{0}>>".format(cli_label(folder_stack)))
+        command = input("BPI:/{0}>>".format(cli_label(folder_stack)))
         try:
             if command == "devices":
                 app.get_devices()
@@ -257,7 +260,7 @@ def cli_loop(app):
                     app.get_folders2()
                 else:
                     app.get_metamodels()
-            elif command == "device_summary":
+            elif command == "device_info":
                 device_visualizer(app,result_dict.get(folder_stack[-1]))
             elif command == "clear":
                 os.system("cls")
@@ -273,12 +276,21 @@ def cli_loop(app):
                 print("selected = {0}, drniId={1}".format(select_number,current_obj_drni_id))
             elif command == "ds":
                 device_visualizer(app,current_obj_drni_id)
+            elif command == "node_info":
+                nodeInfo(app,current_obj_drni_id)
+            elif command == "network_info":
+                network_info(app,current_obj_drni_id)   
         except Exception as e:
             print("Malformed DB Query")
             print(e)
 
 
+def app_label():
+    with open('./cli-label.txt', 'r') as f:
+        print(f.read())
+
 if __name__ == "__main__":
+    app_label()
     bolt_url = "bolt://localhost:7687"
     user = "neo4j"
     password = "drni"
@@ -290,4 +302,9 @@ if __name__ == "__main__":
     # device_visualizer(app,258688516053722165)
 
     cli_loop(app)
+
+    # nodeInfo(app,258688516053722165)
+
+    # network_info(app,255859431696502434)
+
     app.close()
