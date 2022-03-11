@@ -7,6 +7,7 @@ from networkInfo import network_info
 from serviceInfo import generic_info
 from nodeViewer import nodeJson
 import pyjsonviewer
+from connectionInfo import connection_info
 
 folder_stack = []
 result_dict = {}
@@ -265,6 +266,8 @@ def cli_loop(app):
                 network_info(app,current_obj_drni_id)
             elif command == "service_info":
                 generic_info(app,"Service",current_obj_drni_id)
+            elif command == "connection_info":
+                connection_info(app,current_obj_drni_id)
             elif command.startswith("mount"):
                 current_obj_drni_id = command.split(" ",1)[1]
                 print("Mounted(drniId) = {0}".format(current_obj_drni_id))
