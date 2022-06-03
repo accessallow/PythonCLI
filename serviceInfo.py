@@ -1,6 +1,6 @@
 from beautifultable import BeautifulTable
 
-def generic_info(app, label, service_drni_id):
+def service_info(app, label, service_drni_id):
     rels = type_of_rels(app,label, service_drni_id)
     for r in rels:
         print("Node(s) with Reletionship : {0}".format(r))
@@ -58,8 +58,9 @@ def print_connnected_table(app, label, network_drni_id, rel_name):
 
 def _rel_items(tx, label, network_drni_id,rel_name):
     query = (
-            "match (n:{0})-[r:{1}]-(m) where n.drniId = {2} "
-            "return r.latest, m.name,m.metamodelId,m.drniId, labels(m) as labels, m.latest, m.status"
-        ).format(label,rel_name,network_drni_id)
+        "match (n:{0})-[r:{1}]-(m) where n.drniId = {2} "
+        "return r.latest, m.name,m.metamodelId,m.drniId, labels(m) as labels, m.latest, m.status"
+    ).format(label,rel_name,network_drni_id)
+    
     result = tx.run(query)
     return [row for row in result]

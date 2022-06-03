@@ -4,16 +4,17 @@ import os
 from deviceVisualizer import device_visualizer
 from nodeInfo import nodeInfo
 from networkInfo import network_info
-from serviceInfo import generic_info
+from serviceInfo import service_info
 from nodeViewer import nodeJson
-import pyjsonviewer
 from connectionInfo import connection_info
+from genericInfo import generic_info
 
 folder_stack = []
 result_dict = {}
 select_dict = {}
 metamodel_map={}
 current_obj_drni_id = -1
+
 
 class App:
 
@@ -265,17 +266,25 @@ def cli_loop(app):
             elif command == "network_info":
                 network_info(app,current_obj_drni_id)
             elif command == "service_info":
-                generic_info(app,"Service",current_obj_drni_id)
+                service_info(app,"Service",current_obj_drni_id)
             elif command == "connection_info":
                 connection_info(app,current_obj_drni_id)
+            elif command == "rel_info":
+                generic_info(app,current_obj_drni_id)
             elif command.startswith("mount"):
                 current_obj_drni_id = command.split(" ",1)[1]
                 print("Mounted(drniId) = {0}".format(current_obj_drni_id))
-            elif command == "node_json":
+            elif command == "json":
                 nodeJson(app,current_obj_drni_id)
+            elif command.startswith("connect "):
+                server_ip = command.split(" ",1)[1]
+                print("Connecting to : bolt://{0}:7687".format(server_ip))
+                appRemote = App("bolt://{0}:7687".format(server_ip),"neo4j","drni")
+                cli_loop(appRemote)
         except Exception as e:
             print("Malformed DB Query")
             print(e)
+
 
 
 def app_label():
@@ -294,7 +303,6 @@ if __name__ == "__main__":
     # device_visualizer(app,258688516053722165)
     # nodeInfo(app,258688516053722165)
     # network_info(app,255859431696502434)
-
     # nodeJson(app,255859431696502434)
      
     cli_loop(app)
